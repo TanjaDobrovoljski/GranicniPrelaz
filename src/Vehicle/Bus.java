@@ -3,6 +3,8 @@ package Vehicle;
 import Passenger.Passenger;
 import tools.TooManyPassengersException;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 
 public class Bus extends Vehicle{
@@ -13,6 +15,8 @@ public class Bus extends Vehicle{
         if(getPassengerCount()>52)
             throw new TooManyPassengersException("U autobusu moze biti maksimalno 52 putnika!");
         this.luggageCapacity = luggageCapacity;
+        this.component=new JPanel();
+        this.component.setBackground(Color.yellow);
 
     }
 

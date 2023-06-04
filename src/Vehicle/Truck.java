@@ -3,6 +3,8 @@ package Vehicle;
 import Passenger.Passenger;
 import tools.TooManyPassengersException;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 import java.util.Random;
 
@@ -19,6 +21,8 @@ public class Truck extends Vehicle{
         Random random = new Random();
         this.documentation= random.nextDouble()<=0.5;
         this.declaredWeight=random.nextDouble() * (MAX_WEIGHT - MIN_WEIGHT) + MIN_WEIGHT;
+        this.component=new JPanel();
+        this.component.setBackground(Color.green);
 
     }
 
