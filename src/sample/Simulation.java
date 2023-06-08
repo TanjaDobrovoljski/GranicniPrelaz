@@ -23,6 +23,8 @@ public class Simulation {
     private JLabel simulationTime;
     private AtomicBoolean isPaused;
     public static  Queue<Vehicle> vehicleQueue=new LinkedList<Vehicle>();
+    private static List<Vehicle> vehicleList;
+
 
     private static JButton[][] buttons;
     public static JPanel borderField;
@@ -97,6 +99,7 @@ public class Simulation {
 
     public void initializeVehicles() throws TooManyPassengersException {
         Passenger p=new Passenger();
+
         List<Passenger> lista=new ArrayList<Passenger>();
         lista.add(p);
 
@@ -119,35 +122,58 @@ public class Simulation {
         }
 
         // Shuffle the queue to randomize the order of vehicles
-        List<Vehicle> vehicleList = new ArrayList<>(vehicleQueue);
+        vehicleList = new ArrayList<>(vehicleQueue);
         Collections.shuffle(vehicleList);
         vehicleQueue = new LinkedList<>(vehicleList);
 
-        // Assign random positions to each vehicle in the queue
-        Random random = new Random();
-        int maxPosition = 50; // Assuming there are 50 positions in the queue
 
 
-        int size=vehicleQueue.size();
         for(int row=3,column=49;column>=0;column--)
         {
-            Vehicle v=vehicleQueue.peek();
+            Vehicle v=vehicleQueue.poll();
             buttons[row][column].add(v.getComponent());
             v.setPositionX(row);
             v.setPositionY(column);
-            vehicleQueue.add(vehicleQueue.poll());
+
         }
+        vehicleQueue.addAll(vehicleList);
+
 
     }
+
+    public  static void copyArray()
+    {
+        vehicleQueue.clear();
+        vehicleQueue.addAll(vehicleList);
+        Vehicle v;
+        int k=position;
+        System.out.println("k= "+k);
+        while(k>0) {
+            v = vehicleQueue.poll();
+            k--;
+        }
+    }
+
 
     public void initilizeTerminals()
     {
         PoliceTerminal p1=new PoliceTerminal(1,false,vehicleQueue);
+        p1.setX(1);
+        p1.setY(51);
         PoliceTerminal p2=new PoliceTerminal(2,false,vehicleQueue);
+        p2.setX(3);
+        p2.setY(51);
         PoliceTerminal pK=new PoliceTerminal(3,true,vehicleQueue);
+        pK.setX(5);
+        pK.setY(51);
+
 
         CustomsTerminal c=new CustomsTerminal(1,false,vehicleQueue);
+        c.setX(1);
+        c.setY(53);
         CustomsTerminal cK=new CustomsTerminal(2,true,vehicleQueue);
+        cK.setX(5);
+        cK.setY(53);
 
         buttons[1][51].add(p1.getComponent());
         buttons[3][51].add(p2.getComponent());
@@ -157,31 +183,36 @@ public class Simulation {
         buttons[5][53].add(cK.getComponent());
 
         p1.start();
+        p2.start();
+        //pK.start();
 
     }
 
-    private static int position=1;
-     public static void movingVehicles(int xx,int yy) {
+    public static int position=0;
 
+     public synchronized static void movingVehicles(int xx,int yy) {
 
-         try {
-             Thread.sleep(1000);
-             removeVehicles();
-             Thread.sleep(1000);
+         System.out.println("position= "+position);
+         copyArray();
+         removeVehicles();
 
-         } catch (InterruptedException e) {
-             e.printStackTrace();
-         }
-
-         for(int row=3,column=49;column>=position;column--)
+         for(int row=3,column=49;vehicleQueue.size()>0 && column>=position;column--)
          {
-             Vehicle v=vehicleQueue.peek();
+             Vehicle v=vehicleQueue.poll();
              buttons[row][column].add(v.getComponent());
              v.setPositionX(row);
              v.setPositionY(column);
-             vehicleQueue.add(vehicleQueue.poll());
+            borderField.repaint();
+             borderField.revalidate();
+
+
+
          }
-        position++;
+
+
+         System.out.println("position= "+position);
+         copyArray();
+
         /*
         for (Vehicle vehicle : vehicleQueue) {
              int currentY = vehicle.getPositionY();
@@ -202,7 +233,7 @@ public class Simulation {
 
 
      }
-    public static void removeVehicles() //refresh za duh figuru (uklanjanje dijamanata)
+    public synchronized static void removeVehicles()
     {
         var list=buttons;
         for (var i: list) {
@@ -210,17 +241,20 @@ public class Simulation {
                 var list2= k.getComponents();
                 for (var m:list2)
                 {
-                    if (m.getBackground().equals(Color.red) || m.getBackground().equals(Color.green) ||m.getBackground().equals(Color.yellow))
+                    if(vehicleQueue.contains(m))
+                  //  if (m.getBackground().equals(Color.red) || m.getBackground().equals(Color.green) ||m.getBackground().equals(Color.yellow))
                     { borderField.remove(m);
                         k.remove(m);
+
 
                     }
                 }
             }
         }
     }
-    public static void removeDiamond(int x,int y) //refresh za duh figuru (uklanjanje dijamanata)
+    public synchronized static void removeVehicle(int x,int y) //refresh za duh figuru (uklanjanje dijamanata)
     {
+
         var list2= buttons[x][y].getComponents();
         for (var m:list2)
         {
@@ -230,8 +264,6 @@ public class Simulation {
                 { borderField.remove(m);
 
                     buttons[x][y].remove(m);
-                    borderField.revalidate();
-                    borderField.repaint();
                     break;
                 }
             }
@@ -239,8 +271,7 @@ public class Simulation {
             { borderField.remove(m);
 
                 buttons[x][y].remove(m);
-                borderField.revalidate();
-                borderField.repaint();
+
                 break;
             }
         }
