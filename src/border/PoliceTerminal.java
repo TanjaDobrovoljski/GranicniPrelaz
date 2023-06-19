@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PoliceTerminal extends Terminal {
    private Queue<Vehicle> tempQueue = new LinkedList<>();
 
+
     public PoliceTerminal(int terminalID, boolean trucks, Queue<Vehicle> vehicles) {
         super(terminalID, trucks, vehicles);
         this.component = new JPanel();
@@ -25,45 +26,64 @@ public class PoliceTerminal extends Terminal {
         while (!Simulation.vehicleQueue.isEmpty()) {
             Vehicle vehicle;
             synchronized (Simulation.vehicleQueue) {
-                vehicle = Simulation.vehicleQueue.poll();
+                vehicle = Simulation.vehicleQueue.peek();
 
             }
-           // System.out.println("Position in police: " + Simulation.position);
+            if (vehicle == null) {
+                break;
+            }
+            // System.out.println("Position in police: " + Simulation.position);
             if (vehicle != null) {
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
 
-                synchronized (vehicle) {
-                    if (this.isOnlyForTrucks()) {
-                        if (vehicle instanceof Truck) {
-                            System.out.println("element u policiji : "+vehicle);
+                if (this.isOnlyForTrucks()) {
+                    if (vehicle instanceof Truck) {
 
-                            processTruck((Truck) vehicle);
-                        } else {
-                            System.out.println("velicina niza je "+Simulation.vehicleQueue.size());
+                        synchronized (Simulation.vehicleQueue) {
+                            vehicle = Simulation.vehicleQueue.poll();
 
-                            // Iterate through the vehicleQueue to find the first truck
-                            Vehicle truck = Simulation.vehicleQueue.stream()
+                        }
+                        processTruck((Truck) vehicle);
+                    } else {
+                        Vehicle truck;
+                        synchronized (Simulation.vehicleQueue) {
+
+
+                            truck = Simulation.vehicleQueue.stream()
                                     .filter(v -> v instanceof Truck)
                                     .findFirst()
                                     .orElse(null);
-                            if (truck != null) {
-                                // Remove the truck from the vehicleQueue and process it
-
-
-                                processTruck((Truck) truck);
-                            }
                         }
+                        if (truck != null) {
+                            processTruck((Truck) truck);
+                        }
+                    }
+                } else {
+                    if (vehicle instanceof Bus || vehicle instanceof Car) {
+
+                        synchronized (Simulation.vehicleQueue) {
+                            vehicle = Simulation.vehicleQueue.poll();
+
+
+                        }
+
+                        processVehicle(vehicle);
                     } else {
-                        if (vehicle instanceof Bus || vehicle instanceof Car) {
-                            processVehicle(vehicle);
+                        Vehicle vehicle1;
+
+                        synchronized (Simulation.vehicleQueue) {
+                            vehicle1 = Simulation.vehicleQueue.stream()
+                                    .filter(v -> v instanceof Car || v instanceof Bus)
+                                    .findFirst()
+                                    .orElse(null);
                         }
+                        if (vehicle1 != null) {
+                            processVehicle(vehicle1);
+                        }
+
                     }
                 }
             }
+
 
             try {
                 Thread.sleep(1000);
@@ -157,34 +177,35 @@ public class PoliceTerminal extends Terminal {
 
 
     private  void processVehicle(Vehicle vehicle) {
-        int x=vehicle.getPositionX();
-        int y=vehicle.getPositionY();
 
-        repaintVehicle(vehicle, this.getX(), this.getY());
+        Simulation.position++;
+
         Simulation.removeElement(vehicle);
+        repaintVehicle(vehicle, this.getX(), this.getY());
+
+
 
     }
 
     private void processTruck(Truck truck) {
 
-        int y=truck.getPositionY();
         Simulation.position++;
-        repaintVehicle(truck, this.getX(), this.getY());
-       // move(y);
         Simulation.removeElement(truck);
+        repaintVehicle(truck, this.getX(), this.getY());
+
 
     }
 
     public synchronized void repaintVehicle(Vehicle v, int x, int y) {
 
-        System.out.println("repaint");
+
        int x1= v.getPositionX();
         int y1=v.getPositionY();
 
         v.setPositionX(x);
         v.setPositionY(y);
 
-        Simulation.getButtons()[x][y].remove(v.getComponent());
+        Simulation.getButtons()[x][y].remove(this.getComponent());
         Simulation.getButtons()[x][y].add(v.getComponent());
 
         Simulation.borderField.repaint();
@@ -197,43 +218,19 @@ public class PoliceTerminal extends Terminal {
             e.printStackTrace();
         }
 
-        Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
-        this.setX(x);
-        this.setY(y);
+        Simulation.getButtons()[x][y].remove(v.getComponent());
+       // Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
+
 Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponent());
         Simulation.borderField.repaint();
         Simulation.borderField.revalidate();
 
 
+
         try {
-            Thread.sleep(1000);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-
-    public synchronized  void move(int yy) {
-
-
-        Simulation.removeVehicles();
-     //   Simulation.copyArray();
-        System.out.println("dio1");
-        Simulation.vehicleQueue.stream()
-                .skip(yy) // Skip the first 3 elements (starting from position 3)
-                .forEach(vehicle -> {
-                    int newY = vehicle.getPositionY() + 1; // Modify the Y coordinate as desired
-                    vehicle.setPositionY(newY);
-                });
-        System.out.println("dio2");
-        for(int row=3;Simulation.vehicleQueue.size()>0 ;)
-        {
-
-            Vehicle v=Simulation.vehicleQueue.poll();
-            Simulation.getButtons()[row][v.getPositionY()].add(v.getComponent());
-            Simulation.borderField.repaint();
-            Simulation.borderField.revalidate();
-
-        }
-      //  Simulation.copyArray();
-        }
 }
