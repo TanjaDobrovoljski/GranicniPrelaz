@@ -220,12 +220,17 @@ public class Simulation {
         }
 
         try{
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
+            Thread.sleep(1);
+            repaintField(position);
+        } catch (NullPointerException e)
+        {
+
+        }
+        catch (InterruptedException e ) {
             e.printStackTrace();
         }
 
-        repaintField(position);
+
 
     }
 
@@ -240,13 +245,14 @@ public class Simulation {
             Vehicle v=vehicleQueue.peek();
 
                 temp.add(v);
+                try {
+                    vehicleQueue.remove();
+                    buttons[row][column].add(v.getComponent());
 
-                vehicleQueue.remove();
-                buttons[row][column].add(v.getComponent());
-
-                v.setPositionX(row);
-                v.setPositionY(column);
-
+                    v.setPositionX(row);
+                    v.setPositionY(column);
+                }catch (NoSuchElementException e)
+                {}
             borderField.repaint();
             borderField.revalidate();
 

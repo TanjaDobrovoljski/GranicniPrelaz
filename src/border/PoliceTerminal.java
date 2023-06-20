@@ -5,14 +5,17 @@ import sample.Simulation;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PoliceTerminal extends Terminal {
    private Queue<Vehicle> tempQueue = new LinkedList<>();
+    private static final Object positionLock = new Object();
+    private final double personalVehicleProcessingTime = 0.5; // in seconds
+   private final double truckProcessingTime = 0.5; // in seconds
+
+    // Processing time for passengers in buses
+    private final double busProcessingTime = 0.1;
 
 
     public PoliceTerminal(int terminalID, boolean trucks, Queue<Vehicle> vehicles) {
@@ -43,18 +46,32 @@ public class PoliceTerminal extends Terminal {
 
                         }
                         processTruck((Truck) vehicle);
+                        try {
+                            Thread.sleep((long) (truckProcessingTime * 1000));
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        Vehicle truck;
+                        Vehicle truck = null;
                         synchronized (Simulation.vehicleQueue) {
-
-
+                            try{
                             truck = Simulation.vehicleQueue.stream()
                                     .filter(v -> v instanceof Truck)
                                     .findFirst()
                                     .orElse(null);
+                            } catch (ConcurrentModificationException e) {
+                                // Handle the exception
+                                System.err.println("Concurrent modification detected: " + e.getMessage());
+                                // Additional error handling or logging can be performed here
+                            }
                         }
                         if (truck != null) {
                             processTruck((Truck) truck);
+                        }
+                        try {
+                            Thread.sleep((long) (truckProcessingTime * 1000));
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
                         }
                     }
                 } else {
@@ -67,32 +84,61 @@ public class PoliceTerminal extends Terminal {
                         }
 
                         processVehicle(vehicle);
+                        if(vehicle instanceof Bus)
+                        {try {
+                            Thread.sleep((long) (busProcessingTime * 1000));
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }}
+                        else
+                        {
+                            try {
+                                Thread.sleep((long) (personalVehicleProcessingTime * 1000));
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                     } else {
-                        Vehicle vehicle1;
+                        Vehicle vehicle1 = null;
 
                         synchronized (Simulation.vehicleQueue) {
+                            try{
                             vehicle1 = Simulation.vehicleQueue.stream()
                                     .filter(v -> v instanceof Car || v instanceof Bus)
                                     .findFirst()
                                     .orElse(null);
+                            } catch (ConcurrentModificationException e) {
+                                // Handle the exception
+                                System.err.println("Concurrent modification detected: " + e.getMessage());
+                                // Additional error handling or logging can be performed here
+                            }
                         }
                         if (vehicle1 != null) {
                             processVehicle(vehicle1);
+
+                            if(vehicle instanceof Bus)
+                            {try {
+                                Thread.sleep((long) (busProcessingTime * 1000));
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }}
+                            else
+                            {
+                                try {
+                                    Thread.sleep((long) (personalVehicleProcessingTime * 1000));
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
 
                     }
                 }
             }
-
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
 
-        System.out.println("Police Terminal finished processing all vehicles.");
+        System.out.println(this.getName()+" Police Terminal finished processing all vehicles.");
     }
 
 
@@ -178,7 +224,9 @@ public class PoliceTerminal extends Terminal {
 
     private  void processVehicle(Vehicle vehicle) {
 
-        Simulation.position++;
+        synchronized (positionLock) {
+            Simulation.position++;
+        }
 
         Simulation.removeElement(vehicle);
         repaintVehicle(vehicle, this.getX(), this.getY());
@@ -189,7 +237,10 @@ public class PoliceTerminal extends Terminal {
 
     private void processTruck(Truck truck) {
 
-        Simulation.position++;
+        synchronized (positionLock) {
+            Simulation.position++;
+        }
+
         Simulation.removeElement(truck);
         repaintVehicle(truck, this.getX(), this.getY());
 
@@ -212,10 +263,20 @@ public class PoliceTerminal extends Terminal {
         Simulation.borderField.revalidate();
 
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(v instanceof Bus)
+        {
+            try {
+                Thread.sleep((long) (busProcessingTime * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                Thread.sleep((long) (personalVehicleProcessingTime * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         Simulation.getButtons()[x][y].remove(v.getComponent());
@@ -227,10 +288,20 @@ Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponen
 
 
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(v instanceof Bus)
+        {
+            try {
+                Thread.sleep((long) (busProcessingTime * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                Thread.sleep((long) (personalVehicleProcessingTime * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
