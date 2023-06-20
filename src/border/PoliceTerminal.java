@@ -9,23 +9,35 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PoliceTerminal extends Terminal {
+    private Queue<Vehicle> vehicles;
    private Queue<Vehicle> tempQueue = new LinkedList<>();
     private static final Object positionLock = new Object();
-    private final double personalVehicleProcessingTime = 0.5; // in seconds
-   private final double truckProcessingTime = 0.5; // in seconds
+    private final double personalVehicleProcessingTimePerPerson = 0.5; // in seconds
+   private final double truckProcessingTimePerPerson = 0.5; // in seconds
+    private CustomsTerminal c;
+
+    public CustomsTerminal getC() {
+        return c;
+    }
+
+    public void setC(CustomsTerminal c) {
+        this.c = c;
+    }
 
     // Processing time for passengers in buses
-    private final double busProcessingTime = 0.1;
+    private final double busProcessingTimePerPerson = 0.1;
 
 
     public PoliceTerminal(int terminalID, boolean trucks, Queue<Vehicle> vehicles) {
-        super(terminalID, trucks, vehicles);
+        super(terminalID, trucks);
+        this.vehicles=vehicles;
         this.component = new JPanel();
         this.component.setBackground(Color.blue);
     }
 
     @Override
     public void run() {
+
         while (!Simulation.vehicleQueue.isEmpty()) {
             Vehicle vehicle;
             synchronized (Simulation.vehicleQueue) {
@@ -46,11 +58,7 @@ public class PoliceTerminal extends Terminal {
 
                         }
                         processTruck((Truck) vehicle);
-                        try {
-                            Thread.sleep((long) (truckProcessingTime * 1000));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+
                     } else {
                         Vehicle truck = null;
                         synchronized (Simulation.vehicleQueue) {
@@ -68,46 +76,46 @@ public class PoliceTerminal extends Terminal {
                         if (truck != null) {
                             processTruck((Truck) truck);
                         }
-                        try {
-                            Thread.sleep((long) (truckProcessingTime * 1000));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+
                     }
                 } else {
                     if (vehicle instanceof Bus || vehicle instanceof Car) {
 
                         synchronized (Simulation.vehicleQueue) {
                             vehicle = Simulation.vehicleQueue.poll();
-
-
                         }
 
                         processVehicle(vehicle);
-                        if(vehicle instanceof Bus)
-                        {try {
-                            Thread.sleep((long) (busProcessingTime * 1000));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }}
-                        else
-                        {
-                            try {
-                                Thread.sleep((long) (personalVehicleProcessingTime * 1000));
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+
+
+                      /*  synchronized (customsTerminal) {
+                            if (customsTerminal.isFree()) {
+                                customsTerminal.processVehicle(vehicle);
+                                if (this.c.getState() == Thread.State.NEW) {
+                                    this.c.start();
+                                }
+                            }else {
+
+                                try {
+                                    customsTerminal.wait(); // Thread waits until notified
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                                customsTerminal.processVehicle(vehicle);
                             }
-                        }
+                        }*/
+
 
                     } else {
                         Vehicle vehicle1 = null;
 
                         synchronized (Simulation.vehicleQueue) {
-                            try{
-                            vehicle1 = Simulation.vehicleQueue.stream()
-                                    .filter(v -> v instanceof Car || v instanceof Bus)
-                                    .findFirst()
-                                    .orElse(null);
+                            try {
+                                vehicle1 = Simulation.vehicleQueue.stream()
+                                        .filter(v -> v instanceof Car || v instanceof Bus)
+                                        .findFirst()
+                                        .orElse(null);
                             } catch (ConcurrentModificationException e) {
                                 // Handle the exception
                                 System.err.println("Concurrent modification detected: " + e.getMessage());
@@ -117,20 +125,25 @@ public class PoliceTerminal extends Terminal {
                         if (vehicle1 != null) {
                             processVehicle(vehicle1);
 
-                            if(vehicle instanceof Bus)
-                            {try {
-                                Thread.sleep((long) (busProcessingTime * 1000));
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }}
-                            else
-                            {
-                                try {
-                                    Thread.sleep((long) (personalVehicleProcessingTime * 1000));
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+                          /*  synchronized (customsTerminal) {
+                                if (customsTerminal.isFree()) {
+                                    customsTerminal.processVehicle(vehicle1);
+                                    if (this.c.getState() == Thread.State.NEW) {
+                                        this.c.start();
+                                    }
                                 }
-                            }
+                                else {
+
+                                            try {
+                                                customsTerminal.wait(); // Thread waits until notified
+                                            } catch (InterruptedException e) {
+                                                e.printStackTrace();
+                                            }
+
+                                        customsTerminal.processVehicle(vehicle1);
+                                    }
+                                }
+                            }*/
                         }
 
                     }
@@ -249,7 +262,7 @@ public class PoliceTerminal extends Terminal {
 
     public synchronized void repaintVehicle(Vehicle v, int x, int y) {
 
-
+        CustomsTerminal customsTerminal = this.c;
        int x1= v.getPositionX();
         int y1=v.getPositionY();
 
@@ -262,18 +275,63 @@ public class PoliceTerminal extends Terminal {
         Simulation.borderField.repaint();
         Simulation.borderField.revalidate();
 
-
+System.out.println(this.getName()+" prva obrada "+v);
         if(v instanceof Bus)
         {
             try {
-                Thread.sleep((long) (busProcessingTime * 1000));
+                Thread.sleep((long) (busProcessingTimePerPerson*v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+            synchronized (customsTerminal) {
+                if (customsTerminal.isFree()) {
+                    customsTerminal.processVehicle(v);
+                    if (this.c.getState() == Thread.State.NEW) {
+                        this.c.start();
+                    }
+                }else {
+
+                    try {
+                        customsTerminal.wait(); // Thread waits until notified
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    customsTerminal.processVehicle(v);
+                }
+            }
+
         }
-        else {
+        else if (v instanceof Car){
             try {
-                Thread.sleep((long) (personalVehicleProcessingTime * 1000));
+                Thread.sleep((long) (personalVehicleProcessingTimePerPerson*v.getPassengerCount() * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            synchronized (customsTerminal) {
+                if (customsTerminal.isFree()) {
+                    customsTerminal.processVehicle(v);
+                    if (this.c.getState() == Thread.State.NEW) {
+                        this.c.start();
+                    }
+                }else {
+
+                    try {
+                        customsTerminal.wait(); // Thread waits until notified
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    customsTerminal.processVehicle(v);
+                }
+            }
+
+        }
+        else if (v instanceof Truck) {
+            try {
+                Thread.sleep((long) (truckProcessingTimePerPerson * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -291,14 +349,14 @@ Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponen
         if(v instanceof Bus)
         {
             try {
-                Thread.sleep((long) (busProcessingTime * 1000));
+                Thread.sleep((long) (busProcessingTimePerPerson*v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
         else {
             try {
-                Thread.sleep((long) (personalVehicleProcessingTime * 1000));
+                Thread.sleep((long) (personalVehicleProcessingTimePerPerson*v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

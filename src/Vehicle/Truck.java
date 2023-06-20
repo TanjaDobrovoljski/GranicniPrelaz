@@ -62,4 +62,10 @@ public class Truck extends Vehicle{
     public void setActualWeight(double actualWeight) {
         this.actualWeight = actualWeight;
     }
+
+    @Override
+    public void processToCustom()
+    {
+        System.out.println("ovo je auto");
+    }
 }

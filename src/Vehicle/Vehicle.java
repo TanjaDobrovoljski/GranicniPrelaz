@@ -52,6 +52,14 @@ public abstract class Vehicle {
 
     }
 
+    public Vehicle(int passengerCount) {
+
+        this.passengerCount += passengerCount;
+        this.broj++;
+        this.id=broj;
+
+    }
+
     public  int getId() {
         return id;
     }
@@ -113,5 +121,7 @@ public abstract class Vehicle {
                 Objects.equals(this.positionY, other.positionY) &&
                 this.id == other.id;
     }
+
+    public abstract void processToCustom();
 
 }

@@ -19,6 +19,15 @@ public class Bus extends Vehicle{
         this.component.setBackground(Color.yellow);
 
     }
+    public Bus(int passengerCount, int luggageCapacity) throws TooManyPassengersException {
+        super( passengerCount);
+        if(getPassengerCount()>52)
+            throw new TooManyPassengersException("U autobusu moze biti maksimalno 52 putnika!");
+        this.luggageCapacity = luggageCapacity;
+        this.component=new JPanel();
+        this.component.setBackground(Color.yellow);
+
+    }
 
     public int getLuggageCapacity() {
         return luggageCapacity;
@@ -26,5 +35,11 @@ public class Bus extends Vehicle{
 
     public void setLuggageCapacity(int luggageCapacity) {
         this.luggageCapacity = luggageCapacity;
+    }
+
+    @Override
+    public void processToCustom()
+    {
+        System.out.println("ovo je auto");
     }
 }

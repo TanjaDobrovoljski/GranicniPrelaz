@@ -1,16 +1,118 @@
 package border;
 
-import Vehicle.Vehicle;
+import Vehicle.*;
+import sample.Simulation;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Queue;
 
 public class CustomsTerminal extends Terminal {
-    public CustomsTerminal(int terminalID, boolean trucks, Queue<Vehicle> vehicles) {
-        super(terminalID,trucks,vehicles);
+    private Vehicle vehicle;
+    private boolean isFree;
+
+    public boolean isFree() {
+        return isFree;
+    }
+
+    public void setFree(boolean free) {
+        isFree = free;
+    }
+
+    public CustomsTerminal(int terminalID, boolean trucks) {
+        super(terminalID,trucks);
         this.component=new JPanel();
         this.component.setBackground(Color.magenta);
+        this.isFree=true;
+    }
+
+    public void processVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+        this.isFree = false;
+
+    }
+
+    @Override
+    public void run() {
+
+        while (true) {
+            if (!isFree) {
+                // Process the vehicle at the customs terminal
+                System.out.println("druga obrada " + this.vehicle);
+                synchronized (this)
+                {
+                repaintVehicle(this.vehicle, this.x, this.y);
+                vehicle.processToCustom();
+                vehicle = null;
+                isFree = true;
+
+
+                notify();
+
+            }
+        }
+
+            // Add a short delay before checking for the next vehicle
+        }
+    }
+
+
+    public synchronized void repaintVehicle(Vehicle v, int x, int y) {
+
+
+        int x1= v.getPositionX();
+        int y1=v.getPositionY();
+
+        v.setPositionX(x);
+        v.setPositionY(y);
+
+        Simulation.getButtons()[x][y].remove(this.getComponent());
+        Simulation.getButtons()[x][y].add(v.getComponent());
+
+        Simulation.borderField.repaint();
+        Simulation.borderField.revalidate();
+
+
+        if(v instanceof Bus)
+        {
+            try {
+                Thread.sleep((long) (2000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                Thread.sleep((long) ( 2000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Simulation.getButtons()[x][y].remove(v.getComponent());
+        // Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
+
+        Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponent());
+        Simulation.borderField.repaint();
+        Simulation.borderField.revalidate();
+
+
+
+        if(v instanceof Bus)
+        {
+            try {
+                Thread.sleep((long) (2000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                Thread.sleep((long) (2000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 }

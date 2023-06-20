@@ -24,4 +24,10 @@ public class Car extends Vehicle{
         //this.vehicleColor=new Color(255, 0, 0);
     }
 
+    @Override
+    public void processToCustom()
+    {
+System.out.println("ovo je auto");
+    }
+
 }

@@ -106,7 +106,7 @@ public class Simulation {
         lista.add(p);
 
        for (int i = 0; i < 5; i++) {
-            Bus bus = new Bus(lista.size(),lista,0);
+            Bus bus = new Bus(35,0);
             vehicleQueue.add(bus);
         }
 
@@ -159,10 +159,10 @@ public class Simulation {
         pK.setY(51);
 
 
-        CustomsTerminal c=new CustomsTerminal(1,false,vehicleQueue);
+        CustomsTerminal c=new CustomsTerminal(1,false);
         c.setX(1);
         c.setY(53);
-        CustomsTerminal cK=new CustomsTerminal(2,true,vehicleQueue);
+        CustomsTerminal cK=new CustomsTerminal(2,true);
         cK.setX(5);
         cK.setY(53);
 
@@ -173,9 +173,13 @@ public class Simulation {
         buttons[1][53].add(c.getComponent());
         buttons[5][53].add(cK.getComponent());
 
+        p1.setC(c);
+        p2.setC(c);
+        pK.setC(cK);
+
         p1.start();
-       p2.start();
-       pK.start();
+        p2.start();
+      // pK.start();
 
     }
 
@@ -220,7 +224,7 @@ public class Simulation {
         }
 
         try{
-            Thread.sleep(1);
+            Thread.sleep(10);
             repaintField(position);
         } catch (NullPointerException e)
         {
