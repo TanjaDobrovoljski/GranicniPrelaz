@@ -24,6 +24,17 @@ public class Car extends Vehicle{
         //this.vehicleColor=new Color(255, 0, 0);
     }
 
+    public Car( List<Passenger> list) throws TooManyPassengersException {
+        super(list);
+         if(getPassengerCount()>5)
+            throw new TooManyPassengersException("U automobilu moze biti maksimalno 5 putnika!");
+
+        this.component=new JPanel();
+        this.component.setBackground(Color.red);
+
+        //this.vehicleColor=new Color(255, 0, 0);
+    }
+
     @Override
     public void processToCustom()
     {

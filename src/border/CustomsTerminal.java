@@ -38,9 +38,9 @@ public class CustomsTerminal extends Terminal {
         while (true) {
             if (!isFree) {
                 // Process the vehicle at the customs terminal
-                System.out.println("druga obrada " + this.vehicle);
                 synchronized (this)
                 {
+
                 repaintVehicle(this.vehicle, this.x, this.y);
                 vehicle.processToCustom();
                 vehicle = null;
@@ -52,7 +52,11 @@ public class CustomsTerminal extends Terminal {
             }
         }
 
-            // Add a short delay before checking for the next vehicle
+            try{
+                Thread.sleep(1000);// Add a short delay before checking for the next vehicle
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -76,14 +80,21 @@ public class CustomsTerminal extends Terminal {
         if(v instanceof Bus)
         {
             try {
+                Thread.sleep((long) (getBusProcessingTimePerPerson()*v.getPassengerCount()*1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        else if (v instanceof Car) {
+            try {
                 Thread.sleep((long) (2000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        else {
+        else if (v instanceof Truck) {
             try {
-                Thread.sleep((long) ( 2000));
+                Thread.sleep((long) (getTruckProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -92,27 +103,12 @@ public class CustomsTerminal extends Terminal {
         Simulation.getButtons()[x][y].remove(v.getComponent());
         // Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
 
-        Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponent());
+        Simulation.getButtons()[x][y].add(this.getComponent());
         Simulation.borderField.repaint();
         Simulation.borderField.revalidate();
 
 
 
-        if(v instanceof Bus)
-        {
-            try {
-                Thread.sleep((long) (2000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        else {
-            try {
-                Thread.sleep((long) (2000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 }

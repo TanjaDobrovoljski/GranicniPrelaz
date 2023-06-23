@@ -1,36 +1,59 @@
 package Passenger;
 
+import java.io.Serializable;
 import java.util.Random;
 import java.util.UUID;
 
-public class Passenger {
+public class Passenger implements Serializable {
     private static int uniqueId;
     private int passengerID;
     private String passengerDocument;
-  private boolean hasLuggage;
+  private boolean hasLuggage,hasUnallowedItems,isDriver,hasValidDocuments;
 
-    public boolean getHasLuggage() {
+    public boolean isHasValidDocuments() {
+        return hasValidDocuments;
+    }
+
+    public void setHasValidDocuments(boolean hasValidDocuments) {
+        this.hasValidDocuments = hasValidDocuments;
+    }
+
+    public boolean isHasLuggage() {
         return hasLuggage;
     }
 
-    public void setHasLuggage(boolean hasLuggage) {
-        this.hasLuggage = hasLuggage;
+    public boolean isDriver() {
+        return isDriver;
     }
 
-    public Passenger()
-    {
-        this.passengerID=uniqueId++;
+    public void setDriver(boolean driver) {
+        isDriver = driver;
+    }
+
+    public boolean getHasLuggage() {
+        return  hasLuggage;
+    }
+
+    @Override
+    public String toString() {
+        return "Passenger{" +
+                "passengerID=" + passengerID +
+                ", passengerDocument='" + passengerDocument + '\'' +
+                ", hasLuggage=" + hasLuggage +
+                ", hasUnallowedItems=" + hasUnallowedItems +
+                ", isDriver=" + isDriver +
+                ", hasValidDocuments=" + hasValidDocuments +
+                '}';
+    }
+
+    public Passenger(boolean isDriver) {
+        this.passengerID = uniqueId++;
         UUID uuid = UUID.randomUUID();
-        passengerDocument=uuid.toString();
+        this.passengerDocument=uuid.toString();
         Random random = new Random();
         this.hasLuggage= random.nextDouble()<=0.7;
-    }
-
-    public Passenger(int passengerID, String passengerDocument) {
-        this.passengerID = passengerID;
-        this.passengerDocument = passengerDocument;
-        Random random = new Random();
-        this.hasLuggage= random.nextDouble()<=0.7;
+        this.isDriver=isDriver;
+        this.hasValidDocuments=true;
     }
 
     public int getPassengerID() {
@@ -49,8 +72,11 @@ public class Passenger {
         this.passengerDocument = passengerDocument;
     }
 
-    public boolean hasUnallowedItemsInLuggage() {
-        Random random = new Random();
-        return random.nextDouble()<=0.1;
+    public boolean gethasUnallowedItemsInLuggage() {
+       return hasUnallowedItems;
+    }
+    public void setHasUnallowedItems(boolean has)
+    {
+        this.hasUnallowedItems=has;
     }
 }

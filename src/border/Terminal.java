@@ -14,6 +14,21 @@ public abstract class Terminal extends Thread{
     protected Color terminalColor;
     protected JPanel component;
     protected int x,y;
+    private final double busProcessingTimePerPerson = 0.1;
+    private final double personalVehicleProcessingTimePerPerson = 0.5; // in seconds
+    private final double truckProcessingTimePerPerson = 0.5; // in seconds
+
+    public double getBusProcessingTimePerPerson() {
+        return busProcessingTimePerPerson;
+    }
+
+    public double getPersonalVehicleProcessingTimePerPerson() {
+        return personalVehicleProcessingTimePerPerson;
+    }
+
+    public double getTruckProcessingTimePerPerson() {
+        return truckProcessingTimePerPerson;
+    }
 
     public boolean isOnlyForTrucks() {
         return onlyForTrucks;

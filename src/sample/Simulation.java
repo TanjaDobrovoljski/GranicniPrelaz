@@ -100,34 +100,87 @@ public class Simulation {
     }
 
     public void initializeVehicles() throws TooManyPassengersException {
-        Passenger p=new Passenger();
+
 
         List<Passenger> lista=new ArrayList<Passenger>();
-        lista.add(p);
+        Random rand=new Random();
+        int tmp=0;
+
+        for(int i=0;i<50;i++)
+        {
+            Passenger passengerDriver=new Passenger(true);
+            lista.add(passengerDriver);
+        }
+
 
        for (int i = 0; i < 5; i++) {
-            Bus bus = new Bus(35,0);
-            vehicleQueue.add(bus);
+           List<Passenger> vehiclePassengers=new ArrayList<Passenger>();
+
+
+           vehiclePassengers.add(lista.get(i));
+           tmp= rand.nextInt(52);
+           for(int j=0;j<tmp;j++)
+           {
+               Passenger p=new Passenger(false);
+               lista.add(p);
+               vehiclePassengers.add(p);
+
+           }
+
+           Bus bus = new Bus(vehiclePassengers);
+           vehicleQueue.add(bus);
         }
 
         // Generate 10 trucks and add them to the queue
-        for (int i = 0; i < 10; i++) {
-            Truck truck = new Truck(0,lista);
+        for (int i = 0,k=5; i < 10; i++,k++) {
+            List<Passenger> vehiclePassengers=new ArrayList<Passenger>();
+
+
+            vehiclePassengers.add(lista.get(k));
+            tmp= rand.nextInt(3);
+            for(int j=0;j<tmp;j++)
+            {
+                Passenger p=new Passenger(false);
+                lista.add(p);
+                vehiclePassengers.add(p);
+
+            }
+
+            Truck truck = new Truck(vehiclePassengers);
             vehicleQueue.add(truck);
         }
 
         // Generate 35 cars and add them to the queue
-        for (int i = 0; i < 35; i++) {
-            Car car = new Car(0,lista);
+        for (int i = 0,k=15; i < 35; i++,k++) {
+            List<Passenger> vehiclePassengers=new ArrayList<Passenger>();
+
+
+            vehiclePassengers.add(lista.get(k));
+            tmp= rand.nextInt(5);
+            for(int j=0;j<tmp;j++)
+            {
+                Passenger p=new Passenger(false);
+                lista.add(p);
+                vehiclePassengers.add(p);
+
+            }
+
+            Car car = new Car(vehiclePassengers);
+
 
             vehicleQueue.add(car);
+        }
+
+        for(int i=0;i<(lista.size()*3)/100;i++)
+        {
+           Passenger p= lista.get(rand.nextInt(lista.size()));
+            p.setHasValidDocuments(false);
         }
 
         // Shuffle the queue to randomize the order of vehicles
         vehicleList = new ArrayList<>(vehicleQueue);
         Collections.shuffle(vehicleList);
         vehicleQueue = new LinkedList<>(vehicleList);
-
 
 
         for(int row=3,column=49;column>=0;column--)
@@ -177,9 +230,9 @@ public class Simulation {
         p2.setC(c);
         pK.setC(cK);
 
-        p1.start();
+       p1.start();
         p2.start();
-      // pK.start();
+     pK.start();
 
     }
 
@@ -249,14 +302,18 @@ public class Simulation {
             Vehicle v=vehicleQueue.peek();
 
                 temp.add(v);
+                if(v!=null){
                 try {
+
                     vehicleQueue.remove();
                     buttons[row][column].add(v.getComponent());
 
                     v.setPositionX(row);
                     v.setPositionY(column);
+
                 }catch (NoSuchElementException e)
                 {}
+                }
             borderField.repaint();
             borderField.revalidate();
 

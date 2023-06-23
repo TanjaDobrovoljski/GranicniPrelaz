@@ -4,20 +4,31 @@ import Passenger.Passenger;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class Vehicle {
+public abstract class Vehicle implements Serializable {
 
     protected Color vehicleColor;
     protected JPanel component;
     private int position;
-    protected int passengerCount=1;
-    List<Passenger> passengerList;
+    protected int passengerCount=0;
+    private List<Passenger> passengerList;
     private Integer positionX;
     private Integer positionY;
     private  int id;
     private static int broj;
+
+    @Override
+    public String toString() {
+        return "Vehicle{" +
+                "passengerCount=" + passengerCount +
+                ", positionX=" + positionX +
+                ", positionY=" + positionY +
+                ", id=" + id +
+                '}';
+    }
 
     public Integer getPositionX() {
         return positionX;
@@ -55,6 +66,14 @@ public abstract class Vehicle {
     public Vehicle(int passengerCount) {
 
         this.passengerCount += passengerCount;
+        this.broj++;
+        this.id=broj;
+
+    }
+    public Vehicle(List<Passenger> list) {
+
+        this.passengerCount =list.size();
+        this.passengerList=list;
         this.broj++;
         this.id=broj;
 

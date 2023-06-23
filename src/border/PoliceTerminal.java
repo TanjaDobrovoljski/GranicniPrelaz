@@ -1,19 +1,27 @@
 package border;
 
+import Passenger.Passenger;
 import Vehicle.*;
 import sample.Simulation;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PoliceTerminal extends Terminal {
     private Queue<Vehicle> vehicles;
    private Queue<Vehicle> tempQueue = new LinkedList<>();
     private static final Object positionLock = new Object();
-    private final double personalVehicleProcessingTimePerPerson = 0.5; // in seconds
-   private final double truckProcessingTimePerPerson = 0.5; // in seconds
+    private List<Passenger> passengersWithIncorrectDocuments;
+    private String filePath = "punishment_records.ser",abbortedVehicles="abborted_vehicles.txt";
+
+    // Check if the file exists
+    private File file = new File(filePath),file2=new File(abbortedVehicles);
+    boolean fileExists = file.exists();
+
     private CustomsTerminal c;
 
     public CustomsTerminal getC() {
@@ -25,7 +33,7 @@ public class PoliceTerminal extends Terminal {
     }
 
     // Processing time for passengers in buses
-    private final double busProcessingTimePerPerson = 0.1;
+
 
 
     public PoliceTerminal(int terminalID, boolean trucks, Queue<Vehicle> vehicles) {
@@ -85,6 +93,7 @@ public class PoliceTerminal extends Terminal {
                             vehicle = Simulation.vehicleQueue.poll();
                         }
 
+                        if(vehicle!=null)
                         processVehicle(vehicle);
 
 
@@ -152,6 +161,7 @@ public class PoliceTerminal extends Terminal {
         }
 
         System.out.println(this.getName()+" Police Terminal finished processing all vehicles.");
+
     }
 
 
@@ -239,10 +249,20 @@ public class PoliceTerminal extends Terminal {
 
         synchronized (positionLock) {
             Simulation.position++;
+            checkPassengers(vehicle);
+
         }
 
-        Simulation.removeElement(vehicle);
-        repaintVehicle(vehicle, this.getX(), this.getY());
+        if(!isDriverInvalid) {
+            Simulation.removeElement(vehicle);
+            repaintVehicle(vehicle, this.getX(), this.getY());
+        }
+        else
+        {
+            Simulation.removeElement(vehicle);
+            abbortVehicle(vehicle,this.getX(),this.getY());
+        }
+
 
 
 
@@ -252,19 +272,25 @@ public class PoliceTerminal extends Terminal {
 
         synchronized (positionLock) {
             Simulation.position++;
+            checkPassengers(truck);
         }
-
-        Simulation.removeElement(truck);
-        repaintVehicle(truck, this.getX(), this.getY());
-
+        if(!isDriverInvalid) {
+            Simulation.removeElement(truck);
+            repaintVehicle(truck, this.getX(), this.getY());
+        }
+        else
+        {
+            Simulation.removeElement(truck);
+            abbortVehicle(truck,this.getX(),this.getY());
+        }
 
     }
 
     public synchronized void repaintVehicle(Vehicle v, int x, int y) {
 
         CustomsTerminal customsTerminal = this.c;
-       int x1= v.getPositionX();
-        int y1=v.getPositionY();
+        int x1 = v.getPositionX();
+        int y1 = v.getPositionY();
 
         v.setPositionX(x);
         v.setPositionY(y);
@@ -275,11 +301,9 @@ public class PoliceTerminal extends Terminal {
         Simulation.borderField.repaint();
         Simulation.borderField.revalidate();
 
-System.out.println(this.getName()+" prva obrada "+v);
-        if(v instanceof Bus)
-        {
+        if (v instanceof Bus) {
             try {
-                Thread.sleep((long) (busProcessingTimePerPerson*v.getPassengerCount() * 1000));
+                Thread.sleep((long) (getBusProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -290,7 +314,7 @@ System.out.println(this.getName()+" prva obrada "+v);
                     if (this.c.getState() == Thread.State.NEW) {
                         this.c.start();
                     }
-                }else {
+                } else {
 
                     try {
                         customsTerminal.wait(); // Thread waits until notified
@@ -302,10 +326,9 @@ System.out.println(this.getName()+" prva obrada "+v);
                 }
             }
 
-        }
-        else if (v instanceof Car){
+        } else if (v instanceof Car) {
             try {
-                Thread.sleep((long) (personalVehicleProcessingTimePerPerson*v.getPassengerCount() * 1000));
+                Thread.sleep((long) (getPersonalVehicleProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -316,7 +339,7 @@ System.out.println(this.getName()+" prva obrada "+v);
                     if (this.c.getState() == Thread.State.NEW) {
                         this.c.start();
                     }
-                }else {
+                } else {
 
                     try {
                         customsTerminal.wait(); // Thread waits until notified
@@ -328,38 +351,140 @@ System.out.println(this.getName()+" prva obrada "+v);
                 }
             }
 
-        }
-        else if (v instanceof Truck) {
+        } else if (v instanceof Truck) {
             try {
-                Thread.sleep((long) (truckProcessingTimePerPerson * v.getPassengerCount() * 1000));
+                Thread.sleep((long) (getTruckProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+
+            synchronized (customsTerminal) {
+                if (customsTerminal.isFree()) {
+                    customsTerminal.processVehicle(v);
+                    if (this.c.getState() == Thread.State.NEW) {
+                        this.c.start();
+                    }
+                } else {
+
+                    try {
+                        customsTerminal.wait(); // Thread waits until notified
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    customsTerminal.processVehicle(v);
+                }
             }
         }
 
         Simulation.getButtons()[x][y].remove(v.getComponent());
-       // Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
+        // Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
 
-Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponent());
+        Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponent());
+        Simulation.borderField.repaint();
+        Simulation.borderField.revalidate();
+
+    }
+
+    private boolean isDriverInvalid=false;
+
+    private synchronized void checkPassengers(Vehicle v)
+    {
+        isDriverInvalid=false;
+          List<Passenger> tmp=new ArrayList<>(v.getPassengerList());
+        passengersWithIncorrectDocuments=new ArrayList<>();
+
+        Iterator<Passenger> iterator = tmp.iterator();
+
+        while (iterator.hasNext()) {
+            Passenger p = iterator.next();
+            if (!p.isHasValidDocuments()) {
+                if(p.isDriver())
+                    isDriverInvalid=true;
+                passengersWithIncorrectDocuments.add(p);
+                iterator.remove(); // Safely remove the element using the iterator
+            }
+        }
+        v.setPassengerList(tmp);
+
+            if(!passengersWithIncorrectDocuments.isEmpty())
+            {
+                try {
+                    if(!fileExists) {
+                        file.createNewFile();
+                        System.out.println("ne postoji fajl");
+                    }
+
+                    FileOutputStream fileOutputStream = new FileOutputStream(file.getName(),true);
+                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                    for (Passenger p:passengersWithIncorrectDocuments
+                         ) {
+                        objectOutputStream.writeObject(p);
+
+                    }
+                    objectOutputStream.close();
+                    fileOutputStream.close();
+
+                    System.out.println("Lista kažnjenih osoba je uspešno serijalizovana.");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+    }
+
+    public synchronized void abbortVehicle(Vehicle v, int x, int y) {
+
+        Simulation.getButtons()[x][y].remove(this.getComponent());
+        Simulation.getButtons()[x][y].add(v.getComponent());
+
+        Simulation.borderField.repaint();
+        Simulation.borderField.revalidate();
+
+        if (v instanceof Bus) {
+            try {
+                Thread.sleep((long) (getBusProcessingTimePerPerson() * v.getPassengerCount() * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        } else if (v instanceof Car) {
+            try {
+                Thread.sleep((long) (getPersonalVehicleProcessingTimePerPerson() * v.getPassengerCount() * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        } else if (v instanceof Truck) {
+            try {
+                Thread.sleep((long) (getTruckProcessingTimePerPerson() * v.getPassengerCount() * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        Simulation.getButtons()[x][y].remove(v.getComponent());
+        // Simulation.removeVehicle(v.getPositionX(), v.getPositionY());
+
+        Simulation.getButtons()[v.getPositionX()][v.getPositionY()].add(this.getComponent());
         Simulation.borderField.repaint();
         Simulation.borderField.revalidate();
 
 
+        try  {
+            if(!file2.exists()) {
+                file2.createNewFile();
+                System.out.println("ne postoji fajl");
+            }
 
-        if(v instanceof Bus)
-        {
-            try {
-                Thread.sleep((long) (busProcessingTimePerPerson*v.getPassengerCount() * 1000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file2,true));
+            writer.write(v.toString());
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.err.println("An error occurred while writing to the file: " + e.getMessage());
         }
-        else {
-            try {
-                Thread.sleep((long) (personalVehicleProcessingTimePerPerson*v.getPassengerCount() * 1000));
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+
     }
+
 }

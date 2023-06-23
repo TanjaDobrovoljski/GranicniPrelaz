@@ -14,8 +14,29 @@ public class Truck extends Vehicle{
     private double actualWeight;
     private final static int MAX_WEIGHT=12000,MIN_WEIGHT=1000;
 
+    @Override
+    public String toString() {
+        return super.toString()+" Truck{" +
+                "documentation=" + documentation +
+                ", declaredWeight=" + declaredWeight +
+                ", actualWeight=" + actualWeight +
+                '}';
+    }
+
     public Truck(int passengerCount, List<Passenger> list) throws TooManyPassengersException {
         super(passengerCount, list);
+        if(getPassengerCount()>3)
+            throw new TooManyPassengersException("U kamionu moze biti maksimalno 3 putnika!");
+        Random random = new Random();
+        this.documentation= random.nextDouble()<=0.5;
+        this.declaredWeight=random.nextDouble() * (MAX_WEIGHT - MIN_WEIGHT) + MIN_WEIGHT;
+        this.component=new JPanel();
+        this.component.setBackground(Color.green);
+
+    }
+
+    public Truck( List<Passenger> list) throws TooManyPassengersException {
+        super(list);
         if(getPassengerCount()>3)
             throw new TooManyPassengersException("U kamionu moze biti maksimalno 3 putnika!");
         Random random = new Random();
@@ -66,6 +87,6 @@ public class Truck extends Vehicle{
     @Override
     public void processToCustom()
     {
-        System.out.println("ovo je auto");
+        System.out.println("ovo je kamion");
     }
 }
