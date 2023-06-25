@@ -24,9 +24,9 @@ public abstract class Vehicle implements Serializable {
     public String toString() {
         return "Vehicle{" +
                 "passengerCount=" + passengerCount +
-                ", positionX=" + positionX +
-                ", positionY=" + positionY +
-                ", id=" + id +
+                " positionX=" + positionX +
+                " positionY=" + positionY +
+                " id=" + id +
                 '}';
     }
 

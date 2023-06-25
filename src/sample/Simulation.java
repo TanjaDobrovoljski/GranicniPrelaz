@@ -8,10 +8,15 @@ import border.CustomsTerminal;
 import border.PoliceTerminal;
 import border.Terminal;
 import tools.FW;
+import tools.GameDurationTimer;
 import tools.TooManyPassengersException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.util.*;
 import java.util.List;
@@ -22,12 +27,31 @@ public class Simulation {
     private JPanel mainPanel;
     private JPanel middle;
     private JButton pauseButton;
-    private JButton restartButton;
     private JLabel simulationTime;
-    private AtomicBoolean isPaused;
+    private JButton dePauseButton;
+    public static boolean isPaused;
     public static  Queue<Vehicle> vehicleQueue=new LinkedList<Vehicle>();
     private static List<Vehicle> vehicleList;
     public static HashMap<Integer, Terminal> terminalsMap=new HashMap<>();
+
+    public JLabel getSimulationTime() {
+        return simulationTime;
+    }
+
+    public void setSimulationTime(JLabel simulationTime) {
+        this.simulationTime = simulationTime;
+    }
+
+    public void pause() {
+        isPaused=true;
+    }
+
+    public void resume() {
+        isPaused=false;
+    }
+
+    public static final String razlogVozac="Vozac nema ispravna dokumenta!",razlogKamion="Stvarna masa kamiona je veca od deklarisane!",
+    razlogPutnik="Putnik nema ispravna dokumenta!",razlogPrtljag="Putnik ima nedozvoljene stvari u prtljagu!";
 
     private String filePath = "status.txt";
     private File file = new File(filePath);
@@ -54,10 +78,11 @@ public class Simulation {
     }
 
     public Simulation() throws TooManyPassengersException {
-        isPaused=new AtomicBoolean(false);
+        isPaused=false;
         borderField = middle;
         int rows=7,columns=55;
         borderField.setLayout(new GridLayout(rows, columns));
+        dePauseButton.setEnabled(false);
 
 
         buttons = new JButton[rows][columns];
@@ -82,6 +107,37 @@ public class Simulation {
 
        initilizeTerminals();
 
+        pauseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                GameDurationTimer.paused=true;
+               for(int i=0;i<5;i++)
+                   if(terminalsMap.get(i).getStatus().equals("released") || terminalsMap.get(i).getStatus().equals("released\r"))
+                       terminalsMap.get(i).suspend();
+                   pauseButton.setEnabled(false);
+                   dePauseButton.setEnabled(true);
+
+            }});
+
+        dePauseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+
+                GameDurationTimer.paused=false;
+                for(int i=0;i<5;i++)
+                    if(terminalsMap.get(i).getStatus().equals("released") || terminalsMap.get(i).getStatus().equals("released\r"))
+                        terminalsMap.get(i).resume();
+                pauseButton.setEnabled(true);
+                dePauseButton.setEnabled(false);
+
+            }});
+
+
+        GameDurationTimer gameTimer = new GameDurationTimer(this);
+        gameTimer.start();
+
     }
 
     public static void main(String args[]) throws TooManyPassengersException {
@@ -102,6 +158,7 @@ public class Simulation {
         frame.setContentPane(application.mainPanel);
         FW fw=new FW();
         fw.start();
+
 
 
 
@@ -202,6 +259,15 @@ public class Simulation {
         for(int row=3,column=49;column>=0;column--)
         {
             Vehicle v=vehicleQueue.poll();
+            v.getComponent().addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    // Handle the click event here
+                    VehicleDetails vehicleForm = new VehicleDetails(v);
+
+
+                }
+            });
             buttons[row][column].add(v.getComponent());
 
             v.setPositionX(row);
@@ -366,4 +432,8 @@ public class Simulation {
         }
 
     }
+
+
+
+
 }

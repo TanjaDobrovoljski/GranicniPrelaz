@@ -1,10 +1,15 @@
 package Vehicle;
 
 import Passenger.Passenger;
+import sample.Simulation;
 import tools.TooManyPassengersException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -13,6 +18,10 @@ import java.util.Random;
 public class Bus extends Vehicle{
     private int luggageCapacity;
     private int numbOfForbiddenLuggage;
+    private String abbortedPassengers="abborted_passengers.txt";
+
+    // Check if the file exists
+    private File file2=new File(abbortedPassengers);
 
     @Override
     public String toString() {
@@ -91,15 +100,28 @@ public class Bus extends Vehicle{
        List<Passenger> lista= new ArrayList<>(this.getPassengerList());
         Iterator<Passenger> iterator = lista.iterator();
 
+        String s=":";
+
+
+
         while(iterator.hasNext())
         {
             Passenger p = iterator.next();
+
             if(p.gethasUnallowedItemsInLuggage())
             {
-                iterator.remove();
+                  iterator.remove();
+                  s+=p.toString()+" "+Simulation.razlogPrtljag+"\n";
             }
         }
         this.setPassengerList(lista);
+        try {
+            BufferedWriter bf=new BufferedWriter(new FileWriter(file2.getName(),true));
+            bf.write(this +" je presao granicu ali navedeni putnici nisu! Razlog: \n"+s);
+            bf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }

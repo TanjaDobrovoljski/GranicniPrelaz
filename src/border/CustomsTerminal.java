@@ -5,11 +5,20 @@ import sample.Simulation;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Queue;
 
 public class CustomsTerminal extends Terminal {
     private Vehicle vehicle;
     private boolean isFree;
+    private String abbortedPassengers="abborted_passengers.txt";
+    public static boolean pause = false;
+
+    // Check if the file exists
+    private File file2=new File(abbortedPassengers);
 
     public boolean isFree() {
         return isFree;
@@ -35,34 +44,42 @@ public class CustomsTerminal extends Terminal {
     @Override
     public void run() {
 
+        while (!Simulation.isPaused) {
         while (true) {
-            if (!isFree) {
-                // Process the vehicle at the customs terminal
-                synchronized (this)
-                {
 
-                repaintVehicle(this.vehicle, this.x, this.y);
-                vehicle.processToCustom();
-                if(vehicle instanceof Truck)
-                {
-                    if(((Truck) vehicle).getActualWeight()!= ((Truck) vehicle).getDeclaredWeight())
-                    {
-                        System.out.println("kamion ne moze da predje granicu!");
+                if (!isFree) {
+                    // Process the vehicle at the customs terminal
+                    synchronized (this) {
+
+                        repaintVehicle(this.vehicle, this.x, this.y);
+                        vehicle.processToCustom();
+                        if (vehicle instanceof Truck) {
+                            if (((Truck) vehicle).getActualWeight() != ((Truck) vehicle).getDeclaredWeight()) {
+                                try {
+                                    BufferedWriter bf = new BufferedWriter(new FileWriter(file2.getName(), true));
+                                    bf.write(vehicle.toString() + " nije presao granicu! Razlog: " + Simulation.razlogKamion + "\n");
+                                    bf.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                            }
+                        }
+                        vehicle = null;
+                        isFree = true;
+
+
+                        notify();
+
                     }
                 }
-                vehicle = null;
-                isFree = true;
 
-
-                notify();
-
-            }
-        }
-
-            try{
-                Thread.sleep(1000);// Add a short delay before checking for the next vehicle
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                try {
+                    Thread.sleep(1000);// Add a short delay before checking for the next vehicle
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

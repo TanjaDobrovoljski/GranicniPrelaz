@@ -46,11 +46,12 @@ public class FW extends Thread{
                 int id = Integer.parseInt(parts[1]);  //1
                 String status = parts[2]; //blocked
                     // Terminal can proceed with processing
+
                 synchronized (Simulation.terminalsMap) {
 
                     if (Simulation.terminalsMap.containsKey(id)) {
                         if (Simulation.terminalsMap.get(id).getStatus().equals("released")) {
-                            if (status.equals("blocked\r")) {
+                            if (status.equals("blocked\r")|| status.equals("blocked")) {
 
                                 System.out.println("nit je iz stanja rada,presla u stanje blokiranja");
                                 Simulation.terminalsMap.get(id).setStatus("blocked");
@@ -60,10 +61,12 @@ public class FW extends Thread{
                                 }
                             }
                         } else if (Simulation.terminalsMap.get(id).getStatus().equals("blocked")) {
-                            if (status.equals("released\r")) {
+                            if (status.equals("released\r") || status.equals("released")) {
                                 System.out.println("nit je iz stanja blokade,presla u stanje rada");
                                 Simulation.terminalsMap.get(id).setStatus("released");
+
                                 if (Simulation.terminalsMap.get(id).getState() == Thread.State.NEW) {
+
                                     Simulation.terminalsMap.get(id).start();
                                 }
                                 else {

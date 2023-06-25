@@ -17,6 +17,7 @@ public class PoliceTerminal extends Terminal {
     private static final Object positionLock = new Object();
     private List<Passenger> passengersWithIncorrectDocuments;
     private String filePath = "punishment_records.ser",abbortedPassengers="abborted_passengers.txt";
+    public static boolean pause = false;
 
     // Check if the file exists
     private File file = new File(filePath),file2=new File(abbortedPassengers);
@@ -46,66 +47,69 @@ public class PoliceTerminal extends Terminal {
     @Override
     public void run() {
 
-        while (!Simulation.vehicleQueue.isEmpty()) {
-            Vehicle vehicle;
-            synchronized (Simulation.vehicleQueue) {
-                vehicle = Simulation.vehicleQueue.peek();
+        while(!Simulation.isPaused) {
+            while (!Simulation.vehicleQueue.isEmpty()) {
+                Vehicle vehicle;
+                synchronized (Simulation.vehicleQueue) {
+                    vehicle = Simulation.vehicleQueue.peek();
 
-            }
-            if (vehicle == null) {
-                break;
-            }
-            // System.out.println("Position in police: " + Simulation.position);
-            if (vehicle != null) {
+                }
+                if (vehicle == null) {
+                    break;
+                }
+                // System.out.println("Position in police: " + Simulation.position);
+                if (vehicle != null) {
 
-                if (this.isOnlyForTrucks()) {
-                    if (vehicle instanceof Truck) {
+                    if (this.isOnlyForTrucks()) {
+                        if (vehicle instanceof Truck) {
 
-                        synchronized (Simulation.vehicleQueue) {
-                            vehicle = Simulation.vehicleQueue.poll();
+                            synchronized (Simulation.vehicleQueue) {
+                                vehicle = Simulation.vehicleQueue.poll();
+
+                            }
+                            processTruck((Truck) vehicle);
+
+                        } else {
+                            Vehicle truck = null;
+                            synchronized (Simulation.vehicleQueue) {
+                                try {
+                                    truck = Simulation.vehicleQueue.stream()
+                                            .filter(v -> v instanceof Truck)
+                                            .findFirst()
+                                            .orElse(null);
+                                } catch (ConcurrentModificationException e) {
+                                }
+                            }
+                            if (truck != null) {
+                                processTruck((Truck) truck);
+                            }
 
                         }
-                        processTruck((Truck) vehicle);
-
                     } else {
-                        Vehicle truck = null;
-                        synchronized (Simulation.vehicleQueue) {
-                            try {
-                                truck = Simulation.vehicleQueue.stream()
-                                        .filter(v -> v instanceof Truck)
-                                        .findFirst()
-                                        .orElse(null);
-                            } catch (ConcurrentModificationException e) { }
-                        }
-                        if (truck != null) {
-                            processTruck((Truck) truck);
-                        }
+                        if (vehicle instanceof Bus || vehicle instanceof Car) {
 
-                    }
-                } else {
-                    if (vehicle instanceof Bus || vehicle instanceof Car) {
+                            synchronized (Simulation.vehicleQueue) {
+                                vehicle = Simulation.vehicleQueue.poll();
+                            }
 
-                        synchronized (Simulation.vehicleQueue) {
-                            vehicle = Simulation.vehicleQueue.poll();
-                        }
+                            if (vehicle != null)
+                                processVehicle(vehicle);
 
-                        if (vehicle != null)
-                            processVehicle(vehicle);
+                        } else {
+                            Vehicle vehicle1 = null;
 
-                    } else {
-                        Vehicle vehicle1 = null;
-
-                        synchronized (Simulation.vehicleQueue) {
-                            try {
-                                vehicle1 = Simulation.vehicleQueue.stream()
-                                        .filter(v -> v instanceof Car || v instanceof Bus)
-                                        .findFirst()
-                                        .orElse(null);
-                            } catch (ConcurrentModificationException e) {
-                                 }
-                        }
-                        if (vehicle1 != null) {
-                            processVehicle(vehicle1);
+                            synchronized (Simulation.vehicleQueue) {
+                                try {
+                                    vehicle1 = Simulation.vehicleQueue.stream()
+                                            .filter(v -> v instanceof Car || v instanceof Bus)
+                                            .findFirst()
+                                            .orElse(null);
+                                } catch (ConcurrentModificationException e) {
+                                }
+                            }
+                            if (vehicle1 != null) {
+                                processVehicle(vehicle1);
+                            }
                         }
                     }
                 }
@@ -295,7 +299,10 @@ public class PoliceTerminal extends Terminal {
                     ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
                     for (Passenger p:passengersWithIncorrectDocuments
                          ) {
-                        bf.write(p.toString());
+                        if(isDriverInvalid)
+                        bf.write(v.toString()+" nije presao granicu! Razlog: "+Simulation.razlogVozac+"\n");
+                        else
+                            bf.write(v.toString()+" je presao granicu ali navedeni putnici nisu! Razlog: "+p.toString()+" "+Simulation.razlogPutnik+"\n");
                         objectOutputStream.writeObject(p);
                     }
                     objectOutputStream.close();
