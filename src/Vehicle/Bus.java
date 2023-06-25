@@ -5,7 +5,10 @@ import tools.TooManyPassengersException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 public class Bus extends Vehicle{
     private int luggageCapacity;
@@ -25,6 +28,7 @@ public class Bus extends Vehicle{
         this.luggageCapacity = passengerCount;
         this.component=new JPanel();
         this.component.setBackground(Color.yellow);
+        checkForUnallowedLuggage();
 
     }
     public Bus(int passengerCount) throws TooManyPassengersException {
@@ -34,6 +38,7 @@ public class Bus extends Vehicle{
         this.luggageCapacity = passengerCount;
         this.component=new JPanel();
         this.component.setBackground(Color.yellow);
+        checkForUnallowedLuggage();
 
 
     }
@@ -46,8 +51,29 @@ public class Bus extends Vehicle{
         this.luggageCapacity = lista.size();
         this.component=new JPanel();
         this.component.setBackground(Color.yellow);
+        checkForUnallowedLuggage();
 
 
+    }
+
+    private void checkForUnallowedLuggage()
+    {
+        List<Passenger> lista=this.getPassengerList();
+        int i=(lista.size()*10)/100;
+
+        if(i!=0) {
+            int tmp = 0;
+            Random rand = new Random();
+
+            for (int j = 0; j < i; ) {
+                int k = rand.nextInt(i);
+                if (lista.get(k).gethasUnallowedItemsInLuggage() == false) {
+                    lista.get(k).setHasUnallowedItems(true);
+                    j++;
+                }
+
+            }
+        }
     }
 
     public int getLuggageCapacity() {
@@ -61,7 +87,19 @@ public class Bus extends Vehicle{
     @Override
     public void processToCustom()
     {
-        System.out.println("ovo je bus");
+
+       List<Passenger> lista= new ArrayList<>(this.getPassengerList());
+        Iterator<Passenger> iterator = lista.iterator();
+
+        while(iterator.hasNext())
+        {
+            Passenger p = iterator.next();
+            if(p.gethasUnallowedItemsInLuggage())
+            {
+                iterator.remove();
+            }
+        }
+        this.setPassengerList(lista);
 
     }
 }

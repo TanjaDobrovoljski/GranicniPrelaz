@@ -8,7 +8,7 @@ public class Passenger implements Serializable {
     private static int uniqueId;
     private int passengerID;
     private String passengerDocument;
-  private boolean hasLuggage,hasUnallowedItems,isDriver,hasValidDocuments;
+  private boolean hasLuggage,hasUnallowedItems=false,isDriver,hasValidDocuments;
 
     public boolean isHasValidDocuments() {
         return hasValidDocuments;
@@ -43,7 +43,7 @@ public class Passenger implements Serializable {
                 ", hasUnallowedItems=" + hasUnallowedItems +
                 ", isDriver=" + isDriver +
                 ", hasValidDocuments=" + hasValidDocuments +
-                '}';
+                "}\n";
     }
 
     public Passenger(boolean isDriver) {

@@ -19,8 +19,8 @@ public class CustomsTerminal extends Terminal {
         isFree = free;
     }
 
-    public CustomsTerminal(int terminalID, boolean trucks) {
-        super(terminalID,trucks);
+    public CustomsTerminal( boolean trucks) {
+        super(trucks);
         this.component=new JPanel();
         this.component.setBackground(Color.magenta);
         this.isFree=true;
@@ -43,6 +43,13 @@ public class CustomsTerminal extends Terminal {
 
                 repaintVehicle(this.vehicle, this.x, this.y);
                 vehicle.processToCustom();
+                if(vehicle instanceof Truck)
+                {
+                    if(((Truck) vehicle).getActualWeight()!= ((Truck) vehicle).getDeclaredWeight())
+                    {
+                        System.out.println("kamion ne moze da predje granicu!");
+                    }
+                }
                 vehicle = null;
                 isFree = true;
 

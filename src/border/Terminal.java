@@ -9,7 +9,8 @@ import java.util.Queue;
 
 public abstract class Terminal extends Thread{
     private int terminalID;
-
+    private static int uniqueId;
+    private String status="";
     private boolean onlyForTrucks;
     protected Color terminalColor;
     protected JPanel component;
@@ -17,6 +18,14 @@ public abstract class Terminal extends Thread{
     private final double busProcessingTimePerPerson = 0.1;
     private final double personalVehicleProcessingTimePerPerson = 0.5; // in seconds
     private final double truckProcessingTimePerPerson = 0.5; // in seconds
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public double getBusProcessingTimePerPerson() {
         return busProcessingTimePerPerson;
@@ -62,8 +71,8 @@ public abstract class Terminal extends Thread{
         this.component = component;
     }
 
-    public Terminal(int terminalID, boolean onlyForTrucks) {
-        this.terminalID = terminalID;
+    public Terminal(boolean onlyForTrucks) {
+        this.terminalID = uniqueId++;
         this.onlyForTrucks=onlyForTrucks;
 
     }

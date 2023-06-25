@@ -6,10 +6,13 @@ import Vehicle.Car;
 import Vehicle.*;
 import border.CustomsTerminal;
 import border.PoliceTerminal;
+import border.Terminal;
+import tools.FW;
 import tools.TooManyPassengersException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,6 +27,10 @@ public class Simulation {
     private AtomicBoolean isPaused;
     public static  Queue<Vehicle> vehicleQueue=new LinkedList<Vehicle>();
     private static List<Vehicle> vehicleList;
+    public static HashMap<Integer, Terminal> terminalsMap=new HashMap<>();
+
+    private String filePath = "status.txt";
+    private File file = new File(filePath);
 
 
 
@@ -93,7 +100,8 @@ public class Simulation {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Simulation application = new Simulation();
         frame.setContentPane(application.mainPanel);
-
+        FW fw=new FW();
+        fw.start();
 
 
 
@@ -146,8 +154,16 @@ public class Simulation {
 
             }
 
+
             Truck truck = new Truck(vehiclePassengers);
+            if(k/2!=0)
+                truck.calculateActualWeight(true);
+            else
+                truck.calculateActualWeight(false);
             vehicleQueue.add(truck);
+
+
+
         }
 
         // Generate 35 cars and add them to the queue
@@ -201,23 +217,28 @@ public class Simulation {
 
     public void initilizeTerminals()
     {
-        PoliceTerminal p1=new PoliceTerminal(1,false,vehicleQueue);
+        PoliceTerminal p1=new PoliceTerminal(false,vehicleQueue);
         p1.setX(1);
         p1.setY(51);
-        PoliceTerminal p2=new PoliceTerminal(2,false,vehicleQueue);
+        terminalsMap.put(p1.getTerminalID(),p1);
+        PoliceTerminal p2=new PoliceTerminal(false,vehicleQueue);
         p2.setX(3);
         p2.setY(51);
-        PoliceTerminal pK=new PoliceTerminal(3,true,vehicleQueue);
+        terminalsMap.put(p2.getTerminalID(),p2);
+        PoliceTerminal pK=new PoliceTerminal(true,vehicleQueue);
         pK.setX(5);
         pK.setY(51);
+        terminalsMap.put(pK.getTerminalID(),pK);
 
 
-        CustomsTerminal c=new CustomsTerminal(1,false);
+        CustomsTerminal c=new CustomsTerminal(false);
         c.setX(1);
         c.setY(53);
-        CustomsTerminal cK=new CustomsTerminal(2,true);
+        terminalsMap.put(c.getTerminalID(),c);
+        CustomsTerminal cK=new CustomsTerminal(true);
         cK.setX(5);
         cK.setY(53);
+        terminalsMap.put(cK.getTerminalID(),cK);
 
         buttons[1][51].add(p1.getComponent());
         buttons[3][51].add(p2.getComponent());
@@ -230,11 +251,31 @@ public class Simulation {
         p2.setC(c);
         pK.setC(cK);
 
-       p1.start();
-        p2.start();
-     pK.start();
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file.getName()));
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                String[] niz=line.split(" ");
+                terminalsMap.get(Integer.parseInt(niz[1])).setStatus(niz[2]);
+
+            }
+            reader.close();
+              }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for(int i=0;i<3;i++)
+        {
+            if(terminalsMap.get(i).getStatus().equals("released"))
+                terminalsMap.get(i).start();
+        }
 
     }
+
+
 
     public static int position=0;
 
