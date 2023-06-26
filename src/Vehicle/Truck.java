@@ -18,11 +18,9 @@ public class Truck extends Vehicle{
 
     @Override
     public String toString() {
-        return super.toString()+" Truck{" +
-                "documentation=" + documentation +
-                ", declaredWeight=" + declaredWeight +
-                ", actualWeight=" + actualWeight +
-                '}';
+        return " Truck " +getId()+
+                " dWeight=" + declaredWeight +
+                " aWeight=" + actualWeight ;
     }
 
     public Truck(int passengerCount, List<Passenger> list) throws TooManyPassengersException {

@@ -33,7 +33,7 @@ public class FW extends Thread{
                     }
 
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            GenLogger.log(FW.class,e);
         }
     }
 
@@ -87,15 +87,4 @@ public class FW extends Thread{
         return Files.readString(Paths.get(STATUS_FILE_PATH)).trim();
     }
 
-    private static void setStatus(String terminal,int id, String status) throws IOException {
-        String newStatus = terminal + " " +id+" "+status;
-        String existingStatuses = readStatus();
-        String updatedStatuses = existingStatuses.replaceFirst("(?m)^" + terminal + "\\s+\\w+", newStatus);
-
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(STATUS_FILE_PATH), StandardCharsets.UTF_8)) {
-            writer.write(updatedStatuses);
-        }
-
-        System.out.println("Status set for " + terminal + ": " + status);
-    }
 }

@@ -2,6 +2,8 @@ package Vehicle;
 
 import Passenger.Passenger;
 import sample.Simulation;
+import tools.FW;
+import tools.GenLogger;
 import tools.TooManyPassengersException;
 
 import javax.swing.*;
@@ -18,16 +20,10 @@ import java.util.Random;
 public class Bus extends Vehicle{
     private int luggageCapacity;
     private int numbOfForbiddenLuggage;
-    private String abbortedPassengers="abborted_passengers.txt";
-
-    // Check if the file exists
-    private File file2=new File(abbortedPassengers);
 
     @Override
     public String toString() {
-        return super.toString()+" Bus{" +
-                "luggageCapacity=" + luggageCapacity +
-                '}';
+        return "Bus "+this.getId();
     }
 
     public Bus(int passengerCount, List<Passenger> lista, int luggageCapacity) throws TooManyPassengersException {
@@ -116,11 +112,11 @@ public class Bus extends Vehicle{
         }
         this.setPassengerList(lista);
         try {
-            BufferedWriter bf=new BufferedWriter(new FileWriter(file2.getName(),true));
-            bf.write(this +" je presao granicu ali navedeni putnici nisu! Razlog: \n"+s);
+            BufferedWriter bf=new BufferedWriter(new FileWriter(Simulation.file2.getName(),true));
+            bf.write("+ "+this +" je presao granicu ali navedeni putnici nisu! Razlog: \n"+s);
             bf.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            GenLogger.log(Bus.class,e);
         }
 
     }

@@ -20,15 +20,7 @@ public abstract class Vehicle implements Serializable {
     private  int id;
     private static int broj;
 
-    @Override
-    public String toString() {
-        return "Vehicle{" +
-                "passengerCount=" + passengerCount +
-                " positionX=" + positionX +
-                " positionY=" + positionY +
-                " id=" + id +
-                '}';
-    }
+
 
     public Integer getPositionX() {
         return positionX;

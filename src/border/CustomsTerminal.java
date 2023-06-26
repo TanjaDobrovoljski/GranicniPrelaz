@@ -2,6 +2,7 @@ package border;
 
 import Vehicle.*;
 import sample.Simulation;
+import tools.GenLogger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,11 +15,7 @@ import java.util.Queue;
 public class CustomsTerminal extends Terminal {
     private Vehicle vehicle;
     private boolean isFree;
-    private String abbortedPassengers="abborted_passengers.txt";
-    public static boolean pause = false;
 
-    // Check if the file exists
-    private File file2=new File(abbortedPassengers);
 
     public boolean isFree() {
         return isFree;
@@ -44,7 +41,7 @@ public class CustomsTerminal extends Terminal {
     @Override
     public void run() {
 
-        while (!Simulation.isPaused) {
+
         while (true) {
 
                 if (!isFree) {
@@ -56,15 +53,31 @@ public class CustomsTerminal extends Terminal {
                         if (vehicle instanceof Truck) {
                             if (((Truck) vehicle).getActualWeight() != ((Truck) vehicle).getDeclaredWeight()) {
                                 try {
-                                    BufferedWriter bf = new BufferedWriter(new FileWriter(file2.getName(), true));
-                                    bf.write(vehicle.toString() + " nije presao granicu! Razlog: " + Simulation.razlogKamion + "\n");
+                                    BufferedWriter bf = new BufferedWriter(new FileWriter(Simulation.file2.getName(), true));
+                                    synchronized (bf) {
+                                        bf.write("- "+vehicle.toString() + " nije presao granicu! Razlog: " + Simulation.razlogKamion + "\n");
+                                    }Simulation.move5.removeAll();
+                                    Simulation.move5.setText("<html>Carinski terminal " + this.getTerminalID() + " obradjuje vozilo " + vehicle.toString() + "<br/>i izbacuje ga sa granice jer " + Simulation.razlogKamion+"</html>");
+
                                     bf.close();
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    GenLogger.log(CustomsTerminal.class,e);;
                                 }
 
 
                             }
+                            else
+                            {
+                                Simulation.move5.removeAll();
+                                Simulation.move5.setText("<html>Carinski terminal " + this.getTerminalID() + " obradjuje vozilo " +  vehicle.getClass().getSimpleName()+vehicle.getId() + "<br/>i prelazi granicu</html>");
+
+                            }
+                        }
+                        else
+                        {
+                            Simulation.move4.removeAll();
+                            Simulation.move4.setText("<html>Carinski terminal " + this.getTerminalID() + " obradjuje vozilo " +  vehicle.getClass().getSimpleName()+vehicle.getId() + "<br/>i prelazi granicu</html>");
+
                         }
                         vehicle = null;
                         isFree = true;
@@ -78,10 +91,10 @@ public class CustomsTerminal extends Terminal {
                 try {
                     Thread.sleep(1000);// Add a short delay before checking for the next vehicle
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    GenLogger.log(CustomsTerminal.class,e);;
                 }
             }
-        }
+
     }
 
 
@@ -106,21 +119,21 @@ public class CustomsTerminal extends Terminal {
             try {
                 Thread.sleep((long) (getBusProcessingTimePerPerson()*v.getPassengerCount()*1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(CustomsTerminal.class,e);;
             }
         }
         else if (v instanceof Car) {
             try {
                 Thread.sleep((long) (2000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(CustomsTerminal.class,e);
             }
         }
         else if (v instanceof Truck) {
             try {
                 Thread.sleep((long) (getTruckProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(CustomsTerminal.class,e);
             }
         }
 

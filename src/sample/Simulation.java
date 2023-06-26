@@ -9,6 +9,7 @@ import border.PoliceTerminal;
 import border.Terminal;
 import tools.FW;
 import tools.GameDurationTimer;
+import tools.GenLogger;
 import tools.TooManyPassengersException;
 
 import javax.swing.*;
@@ -18,6 +19,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,10 +31,27 @@ public class Simulation {
     private JButton pauseButton;
     private JLabel simulationTime;
     private JButton dePauseButton;
+    private  JLabel move1Description;
+    private  JLabel move2Description;
+    private  JLabel move3Description;
+    private  JLabel move4Description;
+    private  JLabel move5Description;
+    private JButton showTablesButton;
+
     public static boolean isPaused;
     public static  Queue<Vehicle> vehicleQueue=new LinkedList<Vehicle>();
     private static List<Vehicle> vehicleList;
     public static HashMap<Integer, Terminal> terminalsMap=new HashMap<>();
+
+    static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("-HH_mm_ss_dd.MM.yyyy");
+    static String time=simpleDateFormat.format(new Date());
+    private static String f =  time+ ".ser";
+    private static String f2 = time+".txt";
+
+    public static File file1 = new File(f),file2=new File(f2);
+
+    public static JLabel move1,move2,move3,move4,move5;
+
 
     public JLabel getSimulationTime() {
         return simulationTime;
@@ -84,6 +103,13 @@ public class Simulation {
         borderField.setLayout(new GridLayout(rows, columns));
         dePauseButton.setEnabled(false);
 
+
+        showTablesButton.setEnabled(false);
+        move1=move1Description;
+        move2=move2Description;
+        move3=move3Description;
+        move4=move4Description;
+        move5=move5Description;
 
         buttons = new JButton[rows][columns];
         int k=1;
@@ -138,7 +164,24 @@ public class Simulation {
         GameDurationTimer gameTimer = new GameDurationTimer(this);
         gameTimer.start();
 
+
+       /* while(terminalsMap.get(0).isAlive()|| terminalsMap.get(1).isAlive() || terminalsMap.get(2).isAlive() || terminalsMap.get(3).isAlive() || terminalsMap.get(4).isAlive())
+        { }
+        GameDurationTimer.paused=true;
+        showTablesButton.setEnabled(true);
+        showTablesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                pauseButton.setEnabled(false);
+                dePauseButton.setEnabled(false);
+                Penalties p=new Penalties();
+
+            }});*/
+
+
     }
+
 
     public static void main(String args[]) throws TooManyPassengersException {
 
@@ -148,8 +191,6 @@ public class Simulation {
 
         frame.setVisible(true);
 
-
-
         frame.pack();
         frame.setSize(1400, 600);
         frame.setLocationRelativeTo(null);
@@ -158,8 +199,6 @@ public class Simulation {
         frame.setContentPane(application.mainPanel);
         FW fw=new FW();
         fw.start();
-
-
 
 
     }
@@ -330,7 +369,7 @@ public class Simulation {
             reader.close();
               }
         catch (IOException e) {
-            e.printStackTrace();
+            GenLogger.log(Simulation.class,e);
         }
 
         for(int i=0;i<3;i++)
@@ -338,6 +377,7 @@ public class Simulation {
             if(terminalsMap.get(i).getStatus().equals("released"))
                 terminalsMap.get(i).start();
         }
+
 
     }
 
@@ -388,10 +428,10 @@ public class Simulation {
             repaintField(position);
         } catch (NullPointerException e)
         {
-
+            GenLogger.log(Simulation.class,e);
         }
         catch (InterruptedException e ) {
-            e.printStackTrace();
+            GenLogger.log(Simulation.class,e);
         }
 
 

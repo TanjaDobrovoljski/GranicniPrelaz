@@ -3,10 +3,12 @@ package border;
 import Passenger.Passenger;
 import Vehicle.*;
 import sample.Simulation;
+import tools.GenLogger;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,12 +18,10 @@ public class PoliceTerminal extends Terminal {
    private Queue<Vehicle> tempQueue = new LinkedList<>();
     private static final Object positionLock = new Object();
     private List<Passenger> passengersWithIncorrectDocuments;
-    private String filePath = "punishment_records.ser",abbortedPassengers="abborted_passengers.txt";
-    public static boolean pause = false;
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("-HH_mm_ss_dd.MM.yyyy");
 
-    // Check if the file exists
-    private File file = new File(filePath),file2=new File(abbortedPassengers);
-    boolean fileExists = file.exists();
+
+
 
     private CustomsTerminal c;
 
@@ -47,7 +47,7 @@ public class PoliceTerminal extends Terminal {
     @Override
     public void run() {
 
-        while(!Simulation.isPaused) {
+
             while (!Simulation.vehicleQueue.isEmpty()) {
                 Vehicle vehicle;
                 synchronized (Simulation.vehicleQueue) {
@@ -114,7 +114,7 @@ public class PoliceTerminal extends Terminal {
                     }
                 }
             }
-        }
+
         System.out.println(this.getName()+" Police Terminal finished processing all vehicles.");
 
     }
@@ -122,7 +122,7 @@ public class PoliceTerminal extends Terminal {
 
     private  void processVehicle(Vehicle vehicle) {
 
-        synchronized (positionLock) {
+          synchronized (positionLock) {
             Simulation.position++;
             checkPassengers(vehicle);
 
@@ -130,11 +130,30 @@ public class PoliceTerminal extends Terminal {
 
         if(!isDriverInvalid) {
             Simulation.removeElement(vehicle);
+            if(this.getTerminalID()==0) {
+                Simulation.move1.removeAll();
+                Simulation.move1.setText("<html>Policijski terminal " + this.getTerminalID() + " obradjuje vozilo " +  vehicle.getClass().getSimpleName()+vehicle.getId() + "<br/>i procesira dalje na carinski terminal</html>");
+            }
+            if(this.getTerminalID()==1) {
+                Simulation.move2.removeAll();
+                Simulation.move2.setText("<html>Policijski terminal " + this.getTerminalID() + " obradjuje vozilo " +  vehicle.getClass().getSimpleName()+vehicle.getId() + "<br/>i procesira dalje na carinski terminal</html>");
+            }
+
             repaintVehicle(vehicle, this.getX(), this.getY());
+
         }
         else
         {
             Simulation.removeElement(vehicle);
+            if(this.getTerminalID()==0) {
+                Simulation.move1.removeAll();
+                Simulation.move1.setText("<html>Policijski terminal " + this.getTerminalID() + " obradjuje vozilo " + vehicle.getClass().getSimpleName()+vehicle.getId() + "<br/>i izbacuje ga sa granice jer " + Simulation.razlogVozac+"</html>");
+            }
+            if(this.getTerminalID()==1) {
+                Simulation.move2.removeAll();
+                Simulation.move2.setText("<html>Policijski terminal " + this.getTerminalID() + " obradjuje vozilo " +  vehicle.getClass().getSimpleName()+vehicle.getId() + "<br/>i izbacuje ga sa granice jer " + Simulation.razlogVozac+"</html>");
+            }
+
             abbortVehicle(vehicle,this.getX(),this.getY());
         }
 
@@ -151,11 +170,19 @@ public class PoliceTerminal extends Terminal {
         }
         if(!isDriverInvalid) {
             Simulation.removeElement(truck);
+            if(this.getTerminalID()==2) {
+                Simulation.move3.removeAll();
+                Simulation.move3.setText("<html>Policijski terminal " + this.getTerminalID() + " obradjuje vozilo<br/>" + truck.toString() + "<br/>i procesira dalje na carinski terminal</html>");
+            }
             repaintVehicle(truck, this.getX(), this.getY());
         }
         else
         {
             Simulation.removeElement(truck);
+            if(this.getTerminalID()==2) {
+                Simulation.move3.removeAll();
+                Simulation.move3.setText("<html>Policijski terminal " + this.getTerminalID() + " obradjuje vozilo<br/>" + truck.toString() + "<br/>iizbacuje ga sa granice jer " + Simulation.razlogVozac+"</html>");
+            }
             abbortVehicle(truck,this.getX(),this.getY());
         }
 
@@ -180,7 +207,7 @@ public class PoliceTerminal extends Terminal {
             try {
                 Thread.sleep((long) (getBusProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(PoliceTerminal.class,e);
             }
 
             synchronized (customsTerminal) {
@@ -194,7 +221,7 @@ public class PoliceTerminal extends Terminal {
                     try {
                         customsTerminal.wait(); // Thread waits until notified
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        GenLogger.log(PoliceTerminal.class,e);
                     }
 
                     customsTerminal.processVehicle(v);
@@ -205,7 +232,7 @@ public class PoliceTerminal extends Terminal {
             try {
                 Thread.sleep((long) (getPersonalVehicleProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(PoliceTerminal.class,e);
             }
 
             synchronized (customsTerminal) {
@@ -221,7 +248,7 @@ public class PoliceTerminal extends Terminal {
                     try {
                         customsTerminal.wait(); // Thread waits until notified
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        GenLogger.log(PoliceTerminal.class,e);
                     }
 
                     customsTerminal.processVehicle(v);
@@ -232,7 +259,7 @@ public class PoliceTerminal extends Terminal {
             try {
                 Thread.sleep((long) (getTruckProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(PoliceTerminal.class,e);
             }
 
             synchronized (customsTerminal) {
@@ -246,7 +273,7 @@ public class PoliceTerminal extends Terminal {
                     try {
                         customsTerminal.wait(); // Thread waits until notified
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        GenLogger.log(PoliceTerminal.class,e);
                     }
 
                     customsTerminal.processVehicle(v);
@@ -289,29 +316,30 @@ public class PoliceTerminal extends Terminal {
             if(!passengersWithIncorrectDocuments.isEmpty())
             {
                 try {
-                    if(!fileExists )
-                        file.createNewFile();
-                    if(!file2.exists())
-                        file2.createNewFile();
+                    if(!Simulation.file1.exists() )
+                        Simulation.file1.createNewFile();
+                    if(!Simulation.file2.exists())
+                        Simulation.file2.createNewFile();
 
-                    BufferedWriter bf=new BufferedWriter(new FileWriter(file2.getName(),true));
-                    FileOutputStream fileOutputStream = new FileOutputStream(file.getName(),true);
+                    BufferedWriter bf=new BufferedWriter(new FileWriter(Simulation.file2.getName(),true));
+                    FileOutputStream fileOutputStream = new FileOutputStream(Simulation.file1.getName(),true);
                     ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                    synchronized (bf ){
                     for (Passenger p:passengersWithIncorrectDocuments
                          ) {
                         if(isDriverInvalid)
-                        bf.write(v.toString()+" nije presao granicu! Razlog: "+Simulation.razlogVozac+"\n");
+                        bf.write("- "+v.toString()+" nije presao granicu! Razlog: "+Simulation.razlogVozac+"\n");
                         else
-                            bf.write(v.toString()+" je presao granicu ali navedeni putnici nisu! Razlog: "+p.toString()+" "+Simulation.razlogPutnik+"\n");
+                            bf.write("+ "+v.toString()+" je presao granicu ali navedeni putnici nisu! Razlog: "+p.toString()+" "+Simulation.razlogPutnik+"\n");
                         objectOutputStream.writeObject(p);
-                    }
+                    }}
                     objectOutputStream.close();
                     fileOutputStream.close();
                    bf.close();
 
                     System.out.println("Lista kažnjenih osoba je uspešno serijalizovana.");
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    GenLogger.log(PoliceTerminal.class,e);
                 }
             }
 
@@ -329,21 +357,21 @@ public class PoliceTerminal extends Terminal {
             try {
                 Thread.sleep((long) (getBusProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(PoliceTerminal.class,e);
             }
 
         } else if (v instanceof Car) {
             try {
                 Thread.sleep((long) (getPersonalVehicleProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(PoliceTerminal.class,e);
             }
 
         } else if (v instanceof Truck) {
             try {
                 Thread.sleep((long) (getTruckProcessingTimePerPerson() * v.getPassengerCount() * 1000));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                GenLogger.log(PoliceTerminal.class,e);
             }
 
         }

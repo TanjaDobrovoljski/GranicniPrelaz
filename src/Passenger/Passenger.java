@@ -36,14 +36,13 @@ public class Passenger implements Serializable {
 
     @Override
     public String toString() {
-        return "Passenger{" +
-                "passengerID=" + passengerID +
-                ", passengerDocument='" + passengerDocument + '\'' +
-                ", hasLuggage=" + hasLuggage +
-                ", hasUnallowedItems=" + hasUnallowedItems +
-                ", isDriver=" + isDriver +
-                ", hasValidDocuments=" + hasValidDocuments +
-                "}\n";
+        return "Passenger "+ passengerID +
+                ",passengerDocument= " + passengerDocument +
+                ",hasLuggage= " + hasLuggage +
+                ",hasUnallowedItems= " + hasUnallowedItems +
+                ",isDriver= " + isDriver +
+                ",hasValidDocuments= " + hasValidDocuments +
+                "\n";
     }
 
     public Passenger(boolean isDriver) {
